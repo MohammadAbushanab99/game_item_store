@@ -1,0 +1,47 @@
+# Full local deployment: PostgreSQL + FastAPI backend + Angular frontend (nginx).
+# Run everything with:  docker compose up --build
+#   Frontend -> http://localhost:4200
+#   API/docs -> http://localhost:8000/docs
+# Demo login: demo / Demo@12345
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: game
+      POSTGRES_PASSWORD: game
+      POSTGRES_DB: game_store
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U game -d game_store"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://game:game@db:5432/game_store
+      # Read from your environment (or a local .env); falls back to an obvious dev value.
+      # Generate your own for anything real:
+      #   python -c "import secrets; print(secrets.token_urlsafe(48))"
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-dev-only-change-me}
+      JWT_EXPIRE_MINUTES: "60"
+      CORS_ORIGINS: '["http://localhost:4200"]'
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
