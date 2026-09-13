@@ -1,0 +1,29 @@
+<a class="back" routerLink="/products">&larr; Back to products</a>
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+@if (product(); as p) {
+  <article class="details">
+    <h1>{{ p.title }}</h1>
+    <p class="description">{{ p.description }}</p>
+    <dl>
+      <dt>Price</dt>
+      <dd>{{ p.price }}</dd>
+      <dt>Location</dt>
+      <dd>{{ p.location }}</dd>
+    </dl>
+    <div class="buy-row">
+      <button type="button" class="buy-now" (click)="buyNow()" [disabled]="buying()">
+        {{ buying() ? 'Processing…' : 'Buy' }}
+      </button>
+      @if (cart.has(p.id)) {
+        <button type="button" class="added" (click)="cart.remove(p.id)">✓ In cart</button>
+        <a class="go-cart" routerLink="/cart">View cart →</a>
+      } @else {
+        <button type="button" class="secondary" (click)="addToCart()">Add to cart</button>
+      }
+    </div>
+  </article>
+}

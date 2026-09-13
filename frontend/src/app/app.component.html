@@ -1,0 +1,21 @@
+<header class="app-header">
+  <a class="brand" routerLink="/products">Game Item Store</a>
+  <nav class="header-actions">
+    @if (auth.isAdmin()) {
+      <a class="admin-link" routerLink="/admin">Admin</a>
+    }
+    @if (auth.isLoggedIn()) {
+      <a class="cart-link" routerLink="/cart">
+        Cart
+        @if (cart.count() > 0) {
+          <span class="cart-count">{{ cart.count() }}</span>
+        }
+      </a>
+      <button type="button" class="logout" (click)="auth.logout()">Log out</button>
+    }
+  </nav>
+</header>
+
+<main class="app-main">
+  <router-outlet />
+</main>

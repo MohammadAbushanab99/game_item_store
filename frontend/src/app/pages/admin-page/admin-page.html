@@ -1,0 +1,202 @@
+<div class="page-head">
+  <a class="back" routerLink="/products">&larr; Back to products</a>
+  <h1>Admin console</h1>
+  <p class="subtitle">Manage countries, the catalogue, and who can access what.</p>
+</div>
+
+<div class="tabs" role="tablist">
+  <button type="button" class="tab" role="tab" [class.active]="activeTab() === 'catalogue'"
+          [attr.aria-selected]="activeTab() === 'catalogue'" (click)="activeTab.set('catalogue')">
+    Catalogue
+  </button>
+  <button type="button" class="tab" role="tab" [class.active]="activeTab() === 'access'"
+          [attr.aria-selected]="activeTab() === 'access'" (click)="activeTab.set('access')">
+    User access
+  </button>
+</div>
+
+<div class="panels" [hidden]="activeTab() !== 'catalogue'">
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="panel-icon icon-countries" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" /><path d="M3 12h18" /><path d="M12 3c2.6 2.7 2.6 15.3 0 18M12 3c-2.6 2.7-2.6 15.3 0 18" />
+        </svg>
+      </span>
+      <div>
+        <h2>Countries</h2>
+        <p class="panel-sub">Regions where items can be sold</p>
+      </div>
+    </div>
+
+    <div class="chips">
+      @for (c of countries(); track c.code) {
+        <span class="chip">{{ c.name }} <span class="chip-code">{{ c.code }}</span></span>
+      } @empty {
+        <span class="muted">No countries yet.</span>
+      }
+    </div>
+
+    <form [formGroup]="countryForm" (ngSubmit)="addCountry()" novalidate>
+      <div class="field">
+        <label for="c-code">Code</label>
+        <input id="c-code" formControlName="code" placeholder="UAE" maxlength="3" />
+      </div>
+      <div class="field">
+        <label for="c-name">Name</label>
+        <input id="c-name" formControlName="name" placeholder="United Arab Emirates" />
+      </div>
+      <button type="submit" [disabled]="countryForm.invalid">Add country</button>
+    </form>
+    @if (countryMsg()) { <p class="notice ok">{{ countryMsg() }}</p> }
+    @if (countryErr()) { <p class="notice error">{{ countryErr() }}</p> }
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <span class="panel-icon icon-game" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="6" width="18" height="12" rx="4" /><path d="M8 12h4M10 10v4M16 11h.01M18.5 13.5h.01" />
+        </svg>
+      </span>
+      <div>
+        <h2>Add a game</h2>
+        <p class="panel-sub">Create one product manually</p>
+      </div>
+    </div>
+
+    <form [formGroup]="productForm" (ngSubmit)="addProduct()" novalidate>
+      <div class="field">
+        <label for="p-title">Title</label>
+        <input id="p-title" formControlName="title" placeholder="Sword of Valor" />
+      </div>
+      <div class="field">
+        <label for="p-desc">Description</label>
+        <input id="p-desc" formControlName="description" placeholder="A legendary blade" />
+      </div>
+      <div class="field">
+        <label for="p-price">Price</label>
+        <input id="p-price" formControlName="price" placeholder="150.00" />
+        @if (productForm.controls.price.touched && productForm.controls.price.invalid) {
+          <small class="error">Enter a valid number (up to 2 decimals).</small>
+        }
+      </div>
+      <div class="field">
+        <label for="p-country">Country</label>
+        <select id="p-country" formControlName="location">
+          <option value="">Select a country</option>
+          @for (c of countries(); track c.code) {
+            <option [value]="c.code">{{ c.name }} ({{ c.code }})</option>
+          }
+        </select>
+      </div>
+      <button type="submit" [disabled]="productForm.invalid">Add game</button>
+    </form>
+    @if (productMsg()) { <p class="notice ok">{{ productMsg() }}</p> }
+    @if (productErr()) { <p class="notice error">{{ productErr() }}</p> }
+  </section>
+
+  <section class="panel panel-wide">
+    <div class="panel-head">
+      <span class="panel-icon icon-import" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 15V3" /><path d="M8 7l4-4 4 4" /><path d="M4 15v3a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-3" />
+        </svg>
+      </span>
+      <div>
+        <h2>Import games</h2>
+        <p class="panel-sub">Bulk add from Excel or CSV</p>
+      </div>
+    </div>
+
+    <p class="muted">
+      File columns: <code>id</code>, <code>title</code>, <code>description</code>, <code>price</code>, <code>country</code>.
+      Every cell is required; duplicate ids or unknown countries cancel the whole import.
+    </p>
+    <div class="dropzone">
+      <input type="file" accept=".xlsx,.csv" (change)="onFileSelected($event)" />
+      <button type="button" (click)="runImport()" [disabled]="!selectedFileName() || importing()">
+        {{ importing() ? 'Importing…' : 'Import' }}
+      </button>
+    </div>
+
+    @if (importMsg()) { <p class="notice ok">{{ importMsg() }}</p> }
+    @if (importGeneralError()) { <p class="notice error">{{ importGeneralError() }}</p> }
+    @if (importRowErrors().length) {
+      <div class="row-errors">
+        <p class="row-errors-title">Problems found — nothing was imported:</p>
+        <ul>
+          @for (e of importRowErrors(); track e.field) {
+            <li><strong>{{ e.field }}</strong>: {{ e.message }}</li>
+          }
+        </ul>
+      </div>
+    }
+  </section>
+</div>
+
+<div class="panels" [hidden]="activeTab() !== 'access'">
+
+  <section class="panel panel-wide">
+    <div class="panel-head">
+      <span class="panel-icon icon-users" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="8" r="3.2" /><path d="M3.5 20a5.5 5.5 0 0 1 11 0" /><path d="M16 5.1a3.2 3.2 0 0 1 0 5.8" /><path d="M17.2 20a5.5 5.5 0 0 0-2.4-4.5" />
+        </svg>
+      </span>
+      <div>
+        <h2>User access to countries</h2>
+        <p class="panel-sub">Choose which countries each user can browse and buy from — admins always see everything</p>
+      </div>
+    </div>
+
+    @if (usersError()) { <p class="notice error">{{ usersError() }}</p> }
+
+    <div class="user-list">
+      @for (u of users(); track u.id) {
+        <div class="user-card">
+          <div class="user-head">
+            <span class="avatar" [class.avatar-admin]="u.is_admin">{{ u.username.charAt(0).toUpperCase() }}</span>
+            <span class="user-name">{{ u.username }}</span>
+            @if (u.is_admin) {
+              <span class="role-badge admin">Admin · all access</span>
+            } @else if (u.has_all_countries) {
+              <span class="role-badge all">All countries</span>
+            } @else {
+              <span class="role-badge">{{ u.countries.length }} {{ u.countries.length === 1 ? 'country' : 'countries' }}</span>
+            }
+          </div>
+
+          @if (!u.is_admin) {
+            <label class="all-toggle">
+              <input type="checkbox" [checked]="u.has_all_countries"
+                     (change)="setAllCountries(u, $any($event.target).checked)" />
+              <span class="switch"></span>
+              <span>Grant access to all countries</span>
+            </label>
+
+            <div class="country-checks" [class.disabled]="u.has_all_countries">
+              @for (c of countries(); track c.code) {
+                <label class="country-chip">
+                  <input type="checkbox"
+                         [checked]="u.has_all_countries || u.countries.includes(c.code)"
+                         [disabled]="u.has_all_countries"
+                         (change)="toggleCountry(u, c.code, $any($event.target).checked)" />
+                  <span>{{ c.name }} ({{ c.code }})</span>
+                </label>
+              }
+            </div>
+
+            <div class="user-actions">
+              <button type="button" (click)="saveUser(u)" [disabled]="u.saving">
+                {{ u.saving ? 'Saving…' : 'Save changes' }}
+              </button>
+              @if (u.savedMessage) { <span class="ok">{{ u.savedMessage }}</span> }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+</div>

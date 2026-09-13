@@ -1,0 +1,46 @@
+@if (order(); as o) {
+  <section class="receipt">
+    <h1>Thank you for your purchase</h1>
+
+    <dl class="meta">
+      <dt>Order number</dt>
+      <dd>{{ o.order_number }}</dd>
+      <dt>Date</dt>
+      <dd>{{ o.created_at | date: 'medium' }}</dd>
+      <dt>Status</dt>
+      <dd>{{ o.status }}</dd>
+    </dl>
+
+    <table class="lines">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Location</th>
+          <th class="num">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of o.items; track item.id) {
+          <tr>
+            <td class="item-title">{{ item.product_title }}</td>
+            <td>{{ item.location }}</td>
+            <td class="num">{{ item.line_total }}</td>
+          </tr>
+        }
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="2" class="grand-label">Total</td>
+          <td class="num grand">{{ o.total_amount }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="actions">
+      <button type="button" (click)="print()">Print receipt</button>
+      <a routerLink="/products">Continue shopping</a>
+    </div>
+  </section>
+} @else if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
