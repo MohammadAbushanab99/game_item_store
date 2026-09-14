@@ -1,8 +1,8 @@
 # Game Item Store
 
 A small full-stack digital game-item shop built for the FS SDE technical assignment.
-Users log in, browse game items (imported from a CSV), view details, and buy one item per
-order to get a receipt.
+Users log in, browse game items (imported from a CSV), view details, add them to a cart, and
+check out for an itemized receipt.
 
 - **Backend** — Python, **FastAPI**, PostgreSQL, SQLAlchemy 2.0, Alembic, JWT auth.
 - **Frontend** — **Angular 17** (standalone components + signals), reactive login form,
@@ -96,18 +96,23 @@ You need **Python 3.12+**, **Docker** (for PostgreSQL), and **Node.js 18.13+**.
 ### 1. Backend (terminal 1)
 
 ```bash
+# Start just PostgreSQL from the repo root (the db service in docker-compose.yml)
+docker compose up -d db                   # PostgreSQL on :5432
+
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1            # Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
 
-docker compose up -d                     # PostgreSQL on :5432
 copy .env.example .env                    # Linux/macOS: cp .env.example .env
 python -c "import secrets; print(secrets.token_urlsafe(48))"   # paste into JWT_SECRET_KEY
 
 alembic upgrade head                      # create tables
+python -m scripts.seed_countries          # seed JO/SA (products reference countries)
 python -m scripts.import_products data/items.csv
 python -m scripts.create_user demo Demo@12345
+python -m scripts.create_user admin Admin@12345 --admin
+python -m scripts.seed_access             # give demo all-country access
 
 uvicorn app.main:app --reload            # http://localhost:8000/docs
 ```
@@ -128,17 +133,19 @@ Open **http://localhost:4200** and sign in with **`demo` / `Demo@12345`**.
 | --- | --- |
 | CSV import (idempotent, validated) | `backend/scripts/import_products.py` |
 | JWT login, protected endpoints | `backend/app/api/routers/auth.py`, `app/api/deps.py` |
-| Paginated product list + JO/SA filter | `backend/app/api/routers/products.py` |
+| Paginated product list + location filter | `backend/app/api/routers/products.py` |
 | Product details | `GET /api/v1/products/{id}` |
-| Buy → order → receipt | `backend/app/api/routers/orders.py` |
+| Cart checkout → order → receipt | `backend/app/api/routers/orders.py` |
+| Admin: countries, add game, file import, user access, sales report | `backend/app/api/routers/admin.py`, `countries.py` |
 | API docs | Swagger `/docs`, `backend/docs/openapi.json` |
-| Login / grid / details / receipt pages | `frontend/src/app/pages/*` |
+| Login / grid / details / cart / receipt / admin pages | `frontend/src/app/pages/*` |
 | Token stored, sent on every request, redirect when logged out | `frontend/src/app/core/auth/*` |
 
 ## Design decisions & assumptions
 
 **Database — PostgreSQL** (SQLite in tests): ACID transactions for orders, exact
-`NUMERIC(10,2)` money, check constraints (`location` must be JO/SA). Tests run without Docker.
+`NUMERIC(10,2)` money, a `price >= 0` check constraint, and `location` as a foreign key to a
+`countries` table. Tests run on SQLite without Docker.
 
 **Backend architecture** — deliberate layers: `router → service → use case → validator +
 repository`. Business logic is testable without HTTP; each class has one job.
@@ -152,9 +159,10 @@ source data — the plain number is shown; `JO`/`SA` marks the sale location (Jo
 Arabia), not a currency. The CSV has no users, so a demo user is seeded by a script. Import
 is idempotent (upsert by id); invalid rows are skipped and reported.
 
-**Orders** snapshot the product title/price/location at purchase time, so a receipt stays
-correct if the product later changes. One product per order, quantity always 1. Fetching
-another user's order returns **404, not 403**, so the API doesn't leak that it exists.
+**Orders** are itemized bills: one order holds one or more line items, each snapshotting the
+product title/price/location at purchase time (quantity defaults to 1) so a receipt stays
+correct if the product later changes. Fetching another user's order returns **404, not 403**,
+so the API doesn't leak that it exists.
 
 **Auth** — JWT HS256, 60-minute expiry, no refresh token (listed as future work). Same login
 error for unknown user and wrong password (no username enumeration). Frontend keeps the token
