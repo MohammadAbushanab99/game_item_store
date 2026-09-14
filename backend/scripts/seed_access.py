@@ -2,6 +2,7 @@ from app.core.database import SessionLocal
 from app.repositories.user_repository import UserRepository
 
 
+# Give the demo user all-country access so it can browse everything out of the box.
 def seed_access() -> None:
     db = SessionLocal()
     try:

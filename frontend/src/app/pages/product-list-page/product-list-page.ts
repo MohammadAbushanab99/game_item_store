@@ -14,6 +14,7 @@ import { Country, Page, Product } from '../../core/models/api.models';
   templateUrl: './product-list-page.html',
   styleUrl: './product-list-page.scss',
 })
+// Page number and country filter live in the URL so refresh and the back button work.
 export class ProductListPage {
   private readonly api = inject(ProductApiService);
   private readonly countryApi = inject(CountryApiService);

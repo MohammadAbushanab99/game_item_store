@@ -3,6 +3,7 @@ from app.models.order import Order
 from app.models.product import Product
 
 
+# Purchase rules; an out-of-region item returns 404 (not 403) so we never reveal it exists.
 class OrderValidator:
     def validate_can_purchase(
         self,

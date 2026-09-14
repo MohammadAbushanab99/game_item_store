@@ -1,3 +1,4 @@
+// DTOs mirroring the backend; money fields are strings (backend Decimal) to avoid float rounding.
 export interface TokenResponse {
   access_token: string;
   token_type: string;

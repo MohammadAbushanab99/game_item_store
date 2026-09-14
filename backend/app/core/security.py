@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.core.exceptions import UnauthorizedException
 
 
+# Passwords are bcrypt-hashed; access tokens are JWT (HS256) that expire.
 def hash_password(plain_password: str) -> str:
     return bcrypt.hashpw(plain_password.encode(), bcrypt.gensalt()).decode()
 

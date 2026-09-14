@@ -5,6 +5,7 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 
+# The CSV has no users, so we seed login accounts (idempotent: skips if the user exists).
 def create_user(username: str, password: str, is_admin: bool = False) -> None:
     db = SessionLocal()
     try:

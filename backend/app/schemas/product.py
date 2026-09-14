@@ -2,6 +2,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+# price is a Decimal serialized as a string (e.g. "150.00") to avoid float rounding.
 class ProductResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

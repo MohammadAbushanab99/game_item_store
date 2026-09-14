@@ -4,6 +4,7 @@ from app.models.country import Country
 DEFAULT_COUNTRIES = {"JO": "Jordan", "SA": "Saudi Arabia"}
 
 
+# Seed the countries the CSV uses (JO, SA) so product location FKs are valid on a fresh DB.
 def seed_countries() -> None:
     db = SessionLocal()
     try:

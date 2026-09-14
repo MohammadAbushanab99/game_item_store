@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
+# Countries are rows (not a hardcoded JO/SA enum) so admins can add regions at runtime.
 class Country(Base):
     __tablename__ = "countries"
     code: Mapped[str] = mapped_column(String(3), primary_key=True)

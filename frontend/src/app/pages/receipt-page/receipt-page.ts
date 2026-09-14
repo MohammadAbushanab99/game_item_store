@@ -11,6 +11,7 @@ import { Order } from '../../core/models/api.models';
   templateUrl: './receipt-page.html',
   styleUrl: './receipt-page.scss',
 })
+// Loads the order from the API (not router state) so the receipt survives a refresh.
 export class ReceiptPage implements OnInit {
   private readonly orderApi = inject(OrderApiService);
   private readonly route = inject(ActivatedRoute);

@@ -36,6 +36,7 @@ def _to_decimal(value) -> Decimal:
     return amount
 
 
+# Atomic import: validates every row first and inserts nothing if any row fails.
 class ImportValidator:
     def validate(
         self,

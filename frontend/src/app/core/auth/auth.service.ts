@@ -8,6 +8,7 @@ import { TokenResponse } from '../models/api.models';
 
 const STORAGE_KEY = 'game_store_token';
 
+// Keeps the JWT in sessionStorage and checks its expiry before every request.
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);

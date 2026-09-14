@@ -24,6 +24,7 @@ class ProductCsvRow(BaseModel):
         return value.strip().upper() if isinstance(value, str) else value
 
 
+# Idempotent: rows are upserted by id, so re-running imports the same data without duplicates.
 def import_products(csv_path: str) -> None:
     imported, skipped = (0, 0)
     db = SessionLocal()

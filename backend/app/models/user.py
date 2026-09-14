@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
+# has_all_countries lets a user see every country (like an admin); otherwise limited via user_countries.
 class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)

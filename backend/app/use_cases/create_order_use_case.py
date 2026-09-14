@@ -10,6 +10,7 @@ from app.schemas.order import OrderResponse, PurchaseRequest
 from app.validators.order_validator import OrderValidator
 
 
+# Builds one order (bill) from a cart; duplicate product ids are merged, quantity defaults to 1.
 class CreateOrderUseCase:
     def __init__(
         self,

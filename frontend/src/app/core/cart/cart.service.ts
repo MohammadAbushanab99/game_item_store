@@ -3,6 +3,7 @@ import { Product } from '../models/api.models';
 
 const STORAGE_KEY = 'game_store_cart';
 
+// Client-side cart in sessionStorage; one of each product (quantity is always 1).
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private readonly products = signal<Product[]>(this.load());

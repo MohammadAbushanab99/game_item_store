@@ -65,6 +65,7 @@ def get_current_admin(user: CurrentUser) -> User:
 CurrentAdmin = Annotated[User, Depends(get_current_admin)]
 
 
+# Country codes the user may access, or None for unrestricted (admin / all-access).
 def get_allowed_countries(user: CurrentUser, db: DbSession) -> set[str] | None:
     if user.is_admin or user.has_all_countries:
         return None

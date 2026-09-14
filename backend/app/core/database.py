@@ -11,6 +11,7 @@ class Base(DeclarativeBase):
     pass
 
 
+# One SQLAlchemy session per request: rolled back on error, always closed.
 def get_db() -> Iterator[Session]:
     db = SessionLocal()
     try:
